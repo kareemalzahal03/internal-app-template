@@ -1,0 +1,75 @@
+# The dev stack. Services with a listener share the host network, so every name is localhost.
+# Source is mounted by directory: a single-file mount sends no change events on Docker Desktop,
+# all of services/web/ would hide the image's node_modules, and a volume nested under a bind
+# mount is ignored there.
+
+volumes:
+  mongo_data:
+  frontend_build:
+
+services:
+  mongo:
+    image: mongo:9
+    network_mode: host
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      start_period: 10s
+      start_interval: 1s
+
+  dev-idp:
+    build:
+      target: dev-idp
+    network_mode: host
+    env_file: services/dev-idp/.env.dev
+    # Run the provider, restarting when its source changes.
+    command: pnpm --filter dev-idp dev
+    volumes:
+      # Mount source so changes trigger restart.
+      - ./services/dev-idp/src:/app/services/dev-idp/src:ro
+    healthcheck:
+      # Healthy once discovery answers.
+      test: ["CMD", "curl", "-fso", "/dev/null", "http://localhost:8080/.well-known/openid-configuration"]
+      start_period: 10s
+      start_interval: 1s
+
+  web:
+    build:
+      target: web-dep
+    # Build the SPA, watch to rebuild on save.
+    command: pnpm --filter web build --watch
+    volumes:
+      # Mount built SPA to shared volume, for API to serve.
+      - frontend_build:/app/services/web/dist
+      # Mount source so changes trigger rebuild. The watcher follows imports only, so config,
+      # index.html and public/ come from the image. https://vite.dev/guide/build#rebuild-on-files-changes
+      - ./services/web/src:/app/services/web/src
+    healthcheck:
+      # Healthy once the first build has landed.
+      test: ["CMD", "test", "-f", "/app/services/web/dist/index.html"]
+      start_period: 10s
+      start_interval: 1s
+
+  api:
+    # The whole app, as in production: the API serves the SPA.
+    build:
+      target: api-dep
+    network_mode: host
+    # Run the API, restarting when its source changes.
+    command: uvicorn app.main:app --reload
+    env_file:
+      - services/api/.env.dev
+      - services/dev-idp/.env.dev
+    volumes:
+      # Mount source so server restarts on changes.
+      - ./services/api/app:/app/app
+      # Mount built SPA so API can serve it.
+      - frontend_build:/app/frontend:ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+      dev-idp:
+        condition: service_healthy
+      web:
+        condition: service_healthy

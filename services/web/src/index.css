@@ -1,0 +1,13 @@
+/* Name the sources rather than let Tailwind scan the folder, which depends
+   on what else is in it. So every machine builds the same CSS. */
+@import 'tailwindcss' source(none);
+@source '../src';
+@source '../index.html';
+
+/* Page colours belong to the document, so every page gets them, with or
+   without the app header. */
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+  }
+}

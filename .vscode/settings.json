@@ -1,0 +1,19 @@
+// Shared by everyone who opens the repo in VS Code.
+// Personal preferences belong in user settings, not here.
+{
+  // The repo's one venv.
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  // Pyrefly is the one language server: errors, navigation and completions.
+  // It runs the pinned pyrefly from .venv, so the editor and CI agree.
+  "python.languageServer": "None",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": { "source.organizeImports.ruff": "explicit" }
+  },
+  // Generated from the API; an edit here is lost when it is regenerated.
+  "files.readonlyInclude": {
+    "services/web/src/lib/api/**": true,
+    "services/web/openapi.json": true
+  }
+}

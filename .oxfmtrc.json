@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "semi": false,
+  "singleQuote": true,
+  "sortImports": true,
+  "sortTailwindcss": true,
+  "ignorePatterns": ["*.md", "services/web/src/lib/api/", "services/web/openapi.json", "services/dev-idp/src/client.json"]
+}

@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ruff_cache/
+.pytest_cache/
+
+# Node
+node_modules/
+.pnpm-store/
+dist/
+
+# Local overrides and secrets (.env, Vite's .env.local); .env.dev is committed.
+.env
+*.local
+*.log
+
+# Agents: personal instructions.
+CLAUDE.local.md
+
+# Editors: the shared VS Code settings are committed.
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.DS_Store

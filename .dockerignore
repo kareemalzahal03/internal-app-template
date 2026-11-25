@@ -1,0 +1,23 @@
+# An allowlist: everything is left out, then each path an image needs is let
+# back in, so a new file never reaches an image by accident.
+*
+
+# The lockfiles and manifests.
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!pyproject.toml
+!uv.lock
+!services/*/package.json
+
+# The API's code and the SPA's sources.
+!services/api/app
+!services/web/index.html
+!services/web/vite.config.ts
+!services/web/tsconfig*.json
+!services/web/src
+!services/web/public
+
+# Inside what is let back in.
+**/__pycache__
+**/.DS_Store

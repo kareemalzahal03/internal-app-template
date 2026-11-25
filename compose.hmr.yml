@@ -1,0 +1,20 @@
+# Vite answers :8000 and proxies /api to the API on :8001, so the browser's origin is unchanged.
+
+services:
+  web:
+    network_mode: host
+    # Serve the SPA with hot module replacement, instead of building it.
+    command: pnpm --filter web dev --host 0.0.0.0 --port 8000 --strictPort
+    environment:
+      API_PROXY_TARGET: http://localhost:8001
+    healthcheck:
+      # Healthy once Vite answers. Nothing builds the SPA in this mode.
+      test: ["CMD", "curl", "-fso", "/dev/null", "http://localhost:8000/"]
+
+  api:
+    # Run behind Vite. OpenAPI docs at :8001/api/docs.
+    command: uvicorn app.main:app --port 8001 --reload
+    volumes: !override
+      - ./services/api/app:/app/app
+      # Mount the committed stand-in, not a stale build from the volume.
+      - ./services/api/frontend:/app/frontend:ro

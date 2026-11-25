@@ -1,0 +1,15 @@
+<!doctype html>
+<!-- A stand-in for the built SPA, so the API always has something to serve
+     at this path: the tests run against it, `just generate-api` imports the
+     app over it, and under `just hmr` the API mounts it because Vite is the
+     one serving the SPA. It never reaches an image — the release stage copies
+     the real build here, and under `just up` the web service's volume covers it. -->
+<html lang="en">
+  <head>
+    <title>frontend fixture</title>
+  </head>
+  <body>
+    frontend fixture — this process is not serving the SPA; <code>just up</code> serves it here,
+    <code>just hmr</code> serves it from Vite on the same port
+  </body>
+</html>

@@ -1,0 +1,3 @@
+# One lockfile and store for these members.
+packages:
+  - 'services/*'

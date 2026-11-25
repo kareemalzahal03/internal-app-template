@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only token: no job writes to the repo.
+permissions:
+  contents: read
+
+jobs:
+  # All the Python.
+  python:
+    runs-on: ubuntu-latest
+    services:
+      # Standalone, not a replica set.
+      mongo:
+        image: mongo:9
+        ports:
+          - 27017:27017
+        # The tests start once Mongo answers a ping.
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 2s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv sync --locked
+      # Fails if a committed agent skill link no longer points at an installed library.
+      - run: uvx library-skills@0.0.21 --claude --check
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pyrefly check
+      - run: uv run pytest -q
+
+  # Every Node member with the script.
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # pnpm and Node come from package.json; setup-node is here for the cache.
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format --check
+      - run: pnpm -r typecheck
+      - run: pnpm -r lint
+      - run: pnpm -r test
+      - run: pnpm -r build
+
+  # Fails if the committed TS client doesn't match the API's schema.
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: uv sync --locked
+      - run: pnpm install --frozen-lockfile
+      # just from PyPI, at a pinned version.
+      - run: uvx --from rust-just@1.59.0 just generate-api
+      - run: git diff --exit-code -- services/web/openapi.json services/web/src/lib/api
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # The release image, SPA build included. Nothing pushes it: each app deploys its own way.
+      - run: docker build .

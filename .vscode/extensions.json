@@ -1,0 +1,10 @@
+// Offered when the repo is opened: the extensions the shared settings assume.
+{
+  "recommendations": [
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "meta.pyrefly",
+    "bradlc.vscode-tailwindcss",
+    "ms-azuretools.vscode-containers"
+  ]
+}
